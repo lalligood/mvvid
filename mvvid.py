@@ -42,7 +42,11 @@ def from_source(match_string: str) -> List[Path]:
     """Return list of file(s)/directory(s) in current directory matching given
     pattern.
     """
-    return [f for f in sorted(curr_dir.iterdir()) if fnmatch(f.name, match_string)]
+    return [
+        f
+        for f in sorted(curr_dir.iterdir())
+        if f.is_symlink() is False and fnmatch(f.name, match_string)
+    ]
 
 
 def get_confirmation(confirm: bool) -> bool:
@@ -93,10 +97,7 @@ def refresh_plex_metadata() -> None:
 @click.command()
 @click.option("--tv/--movie", "target", required=True, help="Content type")
 @click.option(
-    "--match",
-    default="*",
-    required=True,
-    help="Regex pattern of file(s)/directory(s) to move",
+    "--match", default="*", help="Regex pattern of file(s)/directory(s) to move",
 )
 @click.option(
     "-y", "-Y", "confirmation", is_flag=True, help="Confirm move without prompt"
