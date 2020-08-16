@@ -13,11 +13,25 @@ plex_dir = Path("/var/lib/plexmediaserver/Library/")
 curr_dir = Path.cwd()
 
 
+class InvalidDirectoryError(Exception):
+    """Raise this exception if script is run in any other directory than Videos.
+    """
+
+    pass
+
+
 class InvalidUserError(Exception):
     """Raise this exception if script is run as any user other that root user.
     """
 
     pass
+
+
+def verify_current_directory() -> bool:
+    """Make sure that this script is only being run from the Videos directory.
+    """
+    if curr_dir.name != "Videos":
+        raise InvalidDirectoryError(f"No videos found in {curr_dir}!")
 
 
 def only_as_root() -> bool:
@@ -95,20 +109,31 @@ def refresh_plex_metadata() -> None:
 
 
 @click.command()
-@click.option("--tv/--movie", "target", required=True, help="Content type")
+@click.option(
+    "--tv/--movie",
+    "target",
+    required=True,
+    help="Content type, either 'TV show' or 'movie'",
+)
 @click.option(
     "--match", default="*", help="Regex pattern of file(s)/directory(s) to move",
 )
 @click.option(
-    "-y", "-Y", "confirmation", is_flag=True, help="Confirm move without prompt"
+    "-y",
+    "--yes",
+    "confirmation",
+    is_flag=True,
+    help="Confirm move without prompt",
 )
 def main(target, match, confirmation) -> None:
     """Copies directory(s) containing videos and/or video files to PLEX directory
     and refresh PLEX metadata.
 
     Because this script moves file(s)/directory(s) owned by different users,
-    it can only be run as root.
+    it can only be run as root. Also, it should only ever be run from the Videos
+    directory.
     """
+    verify_current_directory()
     if only_as_root():
         target_dir = to_target(target)
         source_list = from_source(match)
