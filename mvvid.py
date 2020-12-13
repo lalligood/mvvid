@@ -14,22 +14,19 @@ curr_dir = Path.cwd()
 
 
 class InvalidDirectoryError(Exception):
-    """Raise this exception if script is run in any other directory than Videos.
-    """
+    """Raise this exception if script is run in any other directory than Videos."""
 
     pass
 
 
 class InvalidUserError(Exception):
-    """Raise this exception if script is run as any user other that root user.
-    """
+    """Raise this exception if script is run as any user other that root user."""
 
     pass
 
 
 def verify_current_directory() -> bool:
-    """Make sure that this script is only being run from the Videos directory.
-    """
+    """Make sure that this script is only being run from the Videos directory."""
     if curr_dir.name != "Videos":
         raise InvalidDirectoryError(f"No videos found in {curr_dir}!")
 
@@ -45,8 +42,7 @@ def only_as_root() -> bool:
 
 
 def to_target(target_option: bool) -> Path:
-    """Return Path to target directory based on target option.
-    """
+    """Return Path to target directory based on target option."""
     target_dir = plex_dir / ("TV_Shows" if target_option else "Movies")
     click.echo(f"Destination directory: {target_dir}")
     return target_dir
@@ -64,8 +60,7 @@ def from_source(match_string: str) -> List[Path]:
 
 
 def get_confirmation(confirm: bool) -> bool:
-    """Get user confirmation. If user does not confirm, then exit.
-    """
+    """Get user confirmation. If user does not confirm, then exit."""
     if not confirm:
         response = input("Do you wish to continue? (Y/N) ")
     if confirm or response.lower().startswith("y"):
@@ -75,8 +70,7 @@ def get_confirmation(confirm: bool) -> bool:
 
 
 def change_owner(target: Path) -> None:
-    """Change owner to plex:plex for file/directory.
-    """
+    """Change owner to plex:plex for file/directory."""
     if target.is_dir():
         for each_file in target.iterdir():
             shutil.chown(each_file, "plex", "plex")
@@ -86,8 +80,7 @@ def change_owner(target: Path) -> None:
 
 
 def move_source_to_target(source_list: List[Path], target: Path) -> None:
-    """Move source directory/file to target directory.
-    """
+    """Move source directory/file to target directory."""
     for each in source_list:
         click.echo(f"Moving {each.name} -> {target}")
         target_name = target / each.name
@@ -102,8 +95,7 @@ def move_source_to_target(source_list: List[Path], target: Path) -> None:
 
 
 def refresh_plex_metadata() -> None:
-    """Refresh PLEX metadata so that new items will appear in menu.
-    """
+    """Refresh PLEX metadata so that new items will appear in menu."""
     click.echo("Refreshing PLEX metadata . . .")
     os.system("sudo su - plex -c ./plex_analyze.sh")
 
@@ -116,7 +108,9 @@ def refresh_plex_metadata() -> None:
     help="Content type, either 'TV show' or 'movie'",
 )
 @click.option(
-    "--match", default="*", help="Regex pattern of file(s)/directory(s) to move",
+    "--match",
+    default="*",
+    help="Regex pattern of file(s)/directory(s) to move",
 )
 @click.option(
     "-y",
