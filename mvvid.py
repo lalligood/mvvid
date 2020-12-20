@@ -61,9 +61,9 @@ def from_source(match_string: str) -> List[Path]:
 
 def get_confirmation(confirm: bool) -> bool:
     """Get user confirmation. If user does not confirm, then exit."""
-    if not confirm:
+    if confirm:
         response = input("Do you wish to continue? (Y/N) ")
-    if confirm or response.lower().startswith("y"):
+    if not confirm or response.lower().startswith("y"):
         return True
     click.echo("Canceling move at user request. Exiting . . .")
     sys.exit(1)
@@ -113,11 +113,11 @@ def refresh_plex_metadata() -> None:
     help="Regex pattern of file(s)/directory(s) to move",
 )
 @click.option(
-    "-y",
-    "--yes",
+    "-c",
+    "--confirm",
     "confirmation",
-    is_flag=True,
-    help="Confirm move without prompt",
+    is_flag=False,
+    help="Request prompt for confirmation before moving",
 )
 def main(target, match, confirmation) -> None:
     """Copies directory(s) containing videos and/or video files to PLEX directory
