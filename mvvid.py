@@ -105,6 +105,8 @@ def refresh_plex_metadata() -> None:
     "--tv/--movie",
     "target",
     required=True,
+    is_flag=True,
+    default=True,
     help="Content type, either 'TV show' or 'movie'",
 )
 @click.option(
@@ -116,10 +118,11 @@ def refresh_plex_metadata() -> None:
     "-c",
     "--confirm",
     "confirmation",
-    is_flag=False,
+    is_flag=True,
+    default=False,
     help="Request prompt for confirmation before moving",
 )
-def main(target, match, confirmation) -> None:
+def main(target: bool, match: str, confirmation: bool) -> None:
     """Copies directory(s) containing videos and/or video files to PLEX directory
     and refresh PLEX metadata.
 
