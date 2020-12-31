@@ -5,12 +5,14 @@ from fnmatch import fnmatch
 import getpass
 import os
 from pathlib import Path
+from rich.console import Console
 import shutil
 import sys
 from typing import List
 
 plex_dir = Path("/var/lib/plexmediaserver/Library/")
 curr_dir = Path.cwd()
+console = Console()
 
 
 class InvalidDirectoryError(Exception):
@@ -44,7 +46,7 @@ def only_as_root() -> bool:
 def to_target(target_option: bool) -> Path:
     """Return Path to target directory based on target option."""
     target_dir = plex_dir / ("TV_Shows" if target_option else "Movies")
-    click.echo(f"Destination directory: {target_dir}")
+    console.print(f"[bold white on green]Destination directory: {target_dir}")
     return target_dir
 
 
@@ -65,7 +67,9 @@ def get_confirmation(confirm: bool) -> bool:
         response = input("Do you wish to continue? (Y/N) ")
     if not confirm or response.lower().startswith("y"):
         return True
-    click.echo("Canceling move at user request. Exiting . . .")
+    console.print(
+        "[bold white on red]Canceling move at user request. Exiting . . ."
+    )
     sys.exit(1)
 
 
@@ -76,13 +80,13 @@ def change_owner(target: Path) -> None:
             shutil.chown(each_file, "plex", "plex")
     # Change owner whether file or directory
     shutil.chown(target, "plex", "plex")
-    click.echo(f"{target} owner changed to plex:plex")
+    console.print(f"[green]{target} owner changed to plex:plex")
 
 
 def move_source_to_target(source_list: List[Path], target: Path) -> None:
     """Move source directory/file to target directory."""
     for each in source_list:
-        click.echo(f"Moving {each.name} -> {target}")
+        console.print(f"[bold blue]Moving {each.name} -> {target}")
         target_name = target / each.name
         if each.is_dir():
             shutil.copytree(each, target_name)
@@ -91,12 +95,14 @@ def move_source_to_target(source_list: List[Path], target: Path) -> None:
             shutil.copy(each, target_name)
             each.unlink()
         change_owner(target_name)
-    click.echo(f"Total of {len(source_list)} directory(s)/file(s) moved.")
+    console.print(
+        f"[white on blue]Total of {len(source_list)} directory(s)/file(s) moved."
+    )
 
 
 def refresh_plex_metadata() -> None:
     """Refresh PLEX metadata so that new items will appear in menu."""
-    click.echo("Refreshing PLEX metadata . . .")
+    console.print("[bold white on green]Refreshing PLEX metadata . . .")
     os.system("sudo su - plex -c ./plex_analyze.sh")
 
 
@@ -134,14 +140,14 @@ def main(target: bool, match: str, confirmation: bool) -> None:
     if only_as_root():
         target_dir = to_target(target)
         source_list = from_source(match)
-        click.echo(
-            f"The following directory(s)/file(s) will be moved to {target_dir}:"
+        console.print(
+            f"[bold blue]The following directory(s)/file(s) will be moved to {target_dir}:"
         )
-        click.echo("\n".join(f"\t{f.name}" for f in source_list))
+        console.print("\n".join(f"[bold green]* {f.name}" for f in source_list))
         if get_confirmation(confirmation):
             move_source_to_target(source_list, target_dir)
             refresh_plex_metadata()
-        click.echo("Exiting . . .")
+        console.print("[bold white on green]Exiting . . .")
 
 
 if __name__ == "__main__":
