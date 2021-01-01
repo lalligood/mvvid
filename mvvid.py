@@ -94,19 +94,19 @@ def move_source_to_target(source_list: List[Path], target: Path) -> None:
             + f"[bold white on blue]{each.name}"
         )
         target_name = target / each.name
-        if each.is_dir():
-            try:
+        try:
+            if each.is_dir():
                 shutil.copytree(each, target_name)
-            except FileExistsError:
-                console.print(
-                    f"[bold white on yellow]{each.name} ALREADY EXISTS! "
-                    + "Skipping . . ."
-                )
-            shutil.rmtree(each)
-        else:
-            shutil.copy(each, target_name)
-            each.unlink()
-        change_owner(target_name)
+                shutil.rmtree(each)
+            else:
+                shutil.copy(each, target_name)
+                each.unlink()
+            change_owner(target_name)
+        except FileExistsError:
+            console.print(
+                f"[bold white on yellow]{each.name} ALREADY EXISTS! "
+                + "Skipping . . ."
+            )
     console.print(
         f"[bold white on blue]Total of {len(source_list)} directory(s)/file(s) "
         + "moved."
