@@ -95,7 +95,13 @@ def move_source_to_target(source_list: List[Path], target: Path) -> None:
         )
         target_name = target / each.name
         if each.is_dir():
-            shutil.copytree(each, target_name)
+            try:
+                shutil.copytree(each, target_name)
+            except FileExistsError:
+                console.print(
+                    f"[bold white on yellow]{each.name} ALREADY EXISTS! "
+                    + "Skipping . . ."
+                )
             shutil.rmtree(each)
         else:
             shutil.copy(each, target_name)
