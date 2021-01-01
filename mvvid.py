@@ -46,7 +46,10 @@ def only_as_root() -> bool:
 def to_target(target_option: bool) -> Path:
     """Return Path to target directory based on target option."""
     target_dir = plex_dir / ("TV_Shows" if target_option else "Movies")
-    console.print(f"[bold white on green]Destination directory: {target_dir}")
+    console.print(
+        "[bold white]Destination directory: "
+        + f"[bold white on green]{target_dir}"
+    )
     return target_dir
 
 
@@ -80,13 +83,16 @@ def change_owner(target: Path) -> None:
             shutil.chown(each_file, "plex", "plex")
     # Change owner whether file or directory
     shutil.chown(target, "plex", "plex")
-    console.print(f"[green]{target} owner changed to plex:plex")
+    console.print(f"[blue]  {target.name} owner changed to plex:plex")
 
 
 def move_source_to_target(source_list: List[Path], target: Path) -> None:
     """Move source directory/file to target directory."""
-    for each in source_list:
-        console.print(f"[bold blue]Moving {each.name} -> {target}")
+    for n, each in enumerate(source_list, 1):
+        console.print(
+            f"[bold white]Moving file/directory {n}/{len(source_list)}: "
+            + f"[bold white on blue]{each.name}"
+        )
         target_name = target / each.name
         if each.is_dir():
             shutil.copytree(each, target_name)
@@ -96,7 +102,8 @@ def move_source_to_target(source_list: List[Path], target: Path) -> None:
             each.unlink()
         change_owner(target_name)
     console.print(
-        f"[white on blue]Total of {len(source_list)} directory(s)/file(s) moved."
+        f"[bold white on blue]Total of {len(source_list)} directory(s)/file(s) "
+        + "moved."
     )
 
 
@@ -141,9 +148,10 @@ def main(target: bool, match: str, confirmation: bool) -> None:
         target_dir = to_target(target)
         source_list = from_source(match)
         console.print(
-            f"[bold blue]The following directory(s)/file(s) will be moved to {target_dir}:"
+            "[bold white]The following directory(s)/file(s) will be moved to "
+            + f"[bold white on blue]{target_dir}[bold white]:"
         )
-        console.print("\n".join(f"[bold green]* {f.name}" for f in source_list))
+        console.print("\n".join(f"[bold blue]  * {f.name}" for f in source_list))
         if get_confirmation(confirmation):
             move_source_to_target(source_list, target_dir)
             refresh_plex_metadata()
