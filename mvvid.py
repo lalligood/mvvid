@@ -10,9 +10,15 @@ import shutil
 import sys
 from typing import List
 
-plex_dir = Path("/var/lib/plexmediaserver/Library/")
+plex_library_dir = Path("/var/lib/plexmediaserver/Library/")
+plex_exec_dir = Path("/usr/lib/plexmediaserver/")
 curr_dir = Path.cwd()
-console = Console()
+console = Console(style="bold white")
+info = "[bold white on blue]"
+low_info = "[blue]"
+warn = "[bold white on yellow]"
+fail = "[bold white on red]"
+success = "[bold white on green]"
 
 
 class InvalidDirectoryError(Exception):
@@ -45,11 +51,8 @@ def only_as_root() -> bool:
 
 def to_target(target_option: bool) -> Path:
     """Return Path to target directory based on target option."""
-    target_dir = plex_dir / ("TV_Shows" if target_option else "Movies")
-    console.print(
-        "[bold white]Destination directory: "
-        + f"[bold white on green]{target_dir}"
-    )
+    target_dir = plex_library_dir / ("TV_Shows" if target_option else "Movies")
+    console.print("Destination directory: " + f"{success}{target_dir}")
     return target_dir
 
 
@@ -70,9 +73,7 @@ def get_confirmation(confirm: bool) -> bool:
         response = input("Do you wish to continue? (Y/N) ")
     if not confirm or response.lower().startswith("y"):
         return True
-    console.print(
-        "[bold white on red]Canceling move at user request. Exiting . . ."
-    )
+    console.print("Canceling move at user request. Exiting . . .", style=fail)
     sys.exit(1)
 
 
@@ -83,15 +84,15 @@ def change_owner(target: Path) -> None:
             shutil.chown(each_file, "plex", "plex")
     # Change owner whether file or directory
     shutil.chown(target, "plex", "plex")
-    console.print(f"[blue]  {target.name} owner changed to plex:plex")
+    console.print(f"  {target.name} owner changed to plex:plex", style=low_info)
 
 
 def move_source_to_target(source_list: List[Path], target: Path) -> None:
     """Move source directory/file to target directory."""
     for n, each in enumerate(source_list, 1):
         console.print(
-            f"[bold white]Moving file/directory {n}/{len(source_list)}: "
-            + f"[bold white on blue]{each.name}"
+            f"Moving file/directory {n}/{len(source_list)}: "
+            + f"{info}{each.name}"
         )
         target_name = target / each.name
         try:
@@ -104,19 +105,22 @@ def move_source_to_target(source_list: List[Path], target: Path) -> None:
             change_owner(target_name)
         except FileExistsError:
             console.print(
-                f"[bold white on yellow]{each.name} ALREADY EXISTS! "
-                + "Skipping . . ."
+                f"{each.name} ALREADY EXISTS! Skipping . . .", style=warn
             )
     console.print(
-        f"[bold white on blue]Total of {len(source_list)} directory(s)/file(s) "
-        + "moved."
+        f"Total of {len(source_list)} directory(s)/file(s) moved.", style=info
     )
 
 
-def refresh_plex_metadata() -> None:
+def refresh_plex_metadata(target: bool) -> None:
     """Refresh PLEX metadata so that new items will appear in menu."""
-    console.print("[bold white on green]Refreshing PLEX metadata . . .")
-    os.system("sudo su - plex -c ./plex_analyze.sh")
+    content_label, library_section = ("TV_Shows", 4) if target else ("Movies", 3)
+    console.print("[bold white on blue]Refreshing PLEX metadata . . .")
+    os.system(
+        f"sudo su - plex -c {plex_exec_dir}/Plex\ Media\ Scanner -srp "
+        + f"--section {library_section}"
+    )
+    console.print(f"{content_label} directory refresh complete", style=success)
 
 
 @click.command()
@@ -154,14 +158,16 @@ def main(target: bool, match: str, confirmation: bool) -> None:
         target_dir = to_target(target)
         source_list = from_source(match)
         console.print(
-            "[bold white]The following directory(s)/file(s) will be moved to "
-            + f"[bold white on blue]{target_dir}[bold white]:"
+            "The following directory(s)/file(s) will be moved to "
+            + f"{info}{target_dir}[/]:"
         )
-        console.print("\n".join(f"[bold blue]  * {f.name}" for f in source_list))
+        console.print(
+            "\n".join(f"  * {f.name}" for f in source_list), style=low_info
+        )
         if get_confirmation(confirmation):
             move_source_to_target(source_list, target_dir)
-            refresh_plex_metadata()
-        console.print("[bold white on green]Exiting . . .")
+            refresh_plex_metadata(target)
+        console.print("Exiting . . .", style=success)
 
 
 if __name__ == "__main__":
