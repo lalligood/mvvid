@@ -117,7 +117,7 @@ def refresh_plex_metadata(target: bool) -> None:
     content_label, library_section = ("TV_Shows", 4) if target else ("Movies", 3)
     console.print("[bold white on blue]Refreshing PLEX metadata . . .")
     os.system(
-        f"sudo su - plex -c {plex_exec_dir}/Plex\ Media\ Scanner -srp "
+        f'sudo su - plex -c "{plex_exec_dir}/Plex Media Scanner" -srp '
         + f"--section {library_section}"
     )
     console.print(f"{content_label} directory refresh complete", style=success)
@@ -161,8 +161,9 @@ def main(target: bool, match: str, confirmation: bool) -> None:
             "The following directory(s)/file(s) will be moved to "
             + f"{info}{target_dir}[/]:"
         )
+        icon = ":television:" if target else ":clapper_board:"
         console.print(
-            "\n".join(f"  * {f.name}" for f in source_list), style=low_info
+            "\n".join(f"  {icon} {f.name}" for f in source_list), style=low_info
         )
         if get_confirmation(confirmation):
             move_source_to_target(source_list, target_dir)
