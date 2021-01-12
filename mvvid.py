@@ -117,8 +117,8 @@ def refresh_plex_metadata(target: bool) -> None:
     content_label, library_section = ("TV_Shows", 4) if target else ("Movies", 3)
     console.print("Refreshing PLEX metadata . . .", style=info)
     os.system(
-        f'sudo su - plex -c "{plex_exec_dir}/Plex Media Scanner" -srp '
-        + f"-c {library_section}"
+        f"sudo su - plex -c '{plex_exec_dir}Plex\ Media\ Scanner -srp "
+        + f"--section {library_section}'"
     )
     console.print(f"{content_label} directory refresh complete", style=success)
 
