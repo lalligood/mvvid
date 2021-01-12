@@ -14,11 +14,11 @@ plex_library_dir = Path("/var/lib/plexmediaserver/Library/")
 plex_exec_dir = Path("/usr/lib/plexmediaserver/")
 curr_dir = Path.cwd()
 console = Console(style="bold white")
-info = "[bold white on blue]"
-low_info = "[blue]"
-warn = "[bold white on yellow]"
-fail = "[bold white on red]"
-success = "[bold white on green]"
+info = "bold white on blue"
+low_info = "blue"
+warn = "bold white on yellow"
+fail = "bold white on red"
+success = "bold white on green"
 
 
 class InvalidDirectoryError(Exception):
@@ -52,7 +52,7 @@ def only_as_root() -> bool:
 def to_target(target_option: bool) -> Path:
     """Return Path to target directory based on target option."""
     target_dir = plex_library_dir / ("TV_Shows" if target_option else "Movies")
-    console.print("Destination directory: " + f"{success}{target_dir}")
+    console.print("Destination directory: " + f"[{success}]{target_dir}")
     return target_dir
 
 
@@ -92,7 +92,7 @@ def move_source_to_target(source_list: List[Path], target: Path) -> None:
     for n, each in enumerate(source_list, 1):
         console.print(
             f"Moving file/directory {n}/{len(source_list)}: "
-            + f"{info}{each.name}"
+            + f"[{info}]{each.name}"
         )
         target_name = target / each.name
         try:
@@ -115,7 +115,7 @@ def move_source_to_target(source_list: List[Path], target: Path) -> None:
 def refresh_plex_metadata(target: bool) -> None:
     """Refresh PLEX metadata so that new items will appear in menu."""
     content_label, library_section = ("TV_Shows", 4) if target else ("Movies", 3)
-    console.print("[bold white on blue]Refreshing PLEX metadata . . .")
+    console.print("Refreshing PLEX metadata . . .", style=info)
     os.system(
         f'sudo su - plex -c "{plex_exec_dir}/Plex Media Scanner" -srp '
         + f"--section {library_section}"
@@ -159,7 +159,7 @@ def main(target: bool, match: str, confirmation: bool) -> None:
         source_list = from_source(match)
         console.print(
             "The following directory(s)/file(s) will be moved to "
-            + f"{info}{target_dir}[/]:"
+            + f"[{info}]{target_dir}[/]:"
         )
         icon = ":television:" if target else ":clapper_board:"
         console.print(
