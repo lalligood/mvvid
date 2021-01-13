@@ -11,7 +11,7 @@ import sys
 from typing import List
 
 plex_library_dir = Path("/var/lib/plexmediaserver/Library/")
-plex_exec_dir = Path("/usr/lib/plexmediaserver/")
+plex_exec_dir = Path("/usr/lib/plexmediaserver")
 curr_dir = Path.cwd()
 console = Console(style="bold white")
 info = "bold white on blue"
@@ -117,7 +117,7 @@ def refresh_plex_metadata(target: bool) -> None:
     content_label, library_section = ("TV_Shows", 4) if target else ("Movies", 3)
     console.print("Refreshing PLEX metadata . . .", style=info)
     os.system(
-        f"sudo su - plex -c '{plex_exec_dir}Plex\ Media\ Scanner -srp "
+        f"sudo su - plex -c '{plex_exec_dir}/Plex\ Media\ Scanner -srp "
         + f"--section {library_section}'"
     )
     console.print(f"{content_label} directory refresh complete", style=success)
@@ -145,7 +145,13 @@ def refresh_plex_metadata(target: bool) -> None:
     default=False,
     help="Request prompt for confirmation before moving",
 )
-def main(target: bool, match: str, confirmation: bool) -> None:
+@click.option(
+    "--refresh-only",
+    is_flag=True,
+    default=False,
+    help="Only refresh metadata",
+)
+def main(target: bool, match: str, confirmation: bool, refresh_only: bool) -> None:
     """Copies directory(s) containing videos and/or video files to PLEX directory
     and refresh PLEX metadata.
 
@@ -155,6 +161,9 @@ def main(target: bool, match: str, confirmation: bool) -> None:
     """
     verify_current_directory()
     if only_as_root():
+        if refresh_only:
+            refresh_plex_metadata(target)
+            sys.exit(0)
         target_dir = to_target(target)
         source_list = from_source(match)
         console.print(
