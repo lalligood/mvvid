@@ -13,7 +13,8 @@ from typing import List
 plex_library_dir = Path("/var/lib/plexmediaserver/Library/")
 plex_exec_dir = Path("/usr/lib/plexmediaserver")
 curr_dir = Path.cwd()
-console = Console(style="bold white")
+default = "bold white"
+console = Console(style=default)
 info = "bold white on blue"
 low_info = "blue"
 warn = "bold white on yellow"
@@ -108,7 +109,8 @@ def move_source_to_target(source_list: List[Path], target: Path) -> None:
                 f"{each.name} ALREADY EXISTS! Skipping . . .", style=warn
             )
     console.print(
-        f"Total of {len(source_list)} directory(s)/file(s) moved.", style=info
+        f"Total of {len(source_list)} directory(s)[{info}]/file(s) moved.",
+        style=info,
     )
 
 
@@ -167,7 +169,7 @@ def main(target: bool, match: str, confirmation: bool, refresh_only: bool) -> No
         target_dir = to_target(target)
         source_list = from_source(match)
         console.print(
-            "The following directory(s)/file(s) will be moved to "
+            f"The following directory(s)[{default}]/file(s) will be moved to "
             + f"[{info}]{target_dir}[/]:"
         )
         icon = ":television:" if target else ":clapper_board:"
