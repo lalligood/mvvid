@@ -38,6 +38,7 @@ def verify_current_directory() -> bool:
     """Make sure that this script is only being run from the Videos directory."""
     if curr_dir.name != "Videos":
         raise InvalidDirectoryError(f"No videos found in {curr_dir}!")
+    return True
 
 
 def only_as_root() -> bool:
@@ -161,8 +162,7 @@ def main(target: bool, match: str, confirmation: bool, refresh_only: bool) -> No
     it can only be run as root. Also, it should only ever be run from the Videos
     directory.
     """
-    verify_current_directory()
-    if only_as_root():
+    if verify_current_directory() and only_as_root():
         if refresh_only:
             refresh_plex_metadata(target)
             sys.exit(0)
