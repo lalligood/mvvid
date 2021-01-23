@@ -76,7 +76,7 @@ def get_confirmation(confirm: bool) -> bool:
     if not confirm or response.lower().startswith("y"):
         return True
     console.print(
-        ":cross mark: Canceling move at user request. Exiting . . .", style=fail
+        ":cross_mark: Canceling move at user request. Exiting . . .", style=fail
     )
     sys.exit(1)
 
@@ -89,7 +89,7 @@ def change_owner(target: Path) -> None:
     # Change owner whether file or directory
     shutil.chown(target, "plex", "plex")
     console.print(
-        f"  :check mark button: {target.name} owner changed to plex:plex",
+        f"  \u2705 owner changed to plex:plex",
         style=low_info,
     )
 
@@ -98,7 +98,7 @@ def move_source_to_target(source_list: List[Path], target: Path) -> None:
     """Move source directory/file to target directory."""
     for n, each in enumerate(source_list, 1):
         console.print(
-            f"Moving file/directory {n}/{len(source_list)}: "
+            f":hourglass_not_done: Moving file/directory {n}/{len(source_list)}: "
             + f"[{info}]{each.name}"
         )
         target_name = target / each.name
@@ -125,7 +125,7 @@ def refresh_plex_metadata(target: bool) -> None:
     content_label, library_section, icon = (
         ("TV_Shows", 4, ":television: ")
         if target
-        else ("Movies", 3, ":clapper board: ")
+        else ("Movies", 3, ":clapper_board: ")
     )
     console.print("Refreshing PLEX metadata . . .", style=info)
     os.system(
@@ -180,8 +180,8 @@ def main(target: bool, match: str, confirmation: bool, refresh_only: bool) -> No
         target_dir = to_target(target)
         source_list = from_source(match)
         console.print(
-            f":information: The following directory(s)[{default}]/file(s) will be moved to "
-            + f"[{info}]{target_dir}[/]:"
+            f":information: The following directory(s)[{default}]/file(s) will be "
+            + f"moved to [{info}]{target_dir}[/]:"
         )
         icon = ":television:" if target else ":clapper_board:"
         console.print(
@@ -190,7 +190,7 @@ def main(target: bool, match: str, confirmation: bool, refresh_only: bool) -> No
         if get_confirmation(confirmation):
             move_source_to_target(source_list, target_dir)
             refresh_plex_metadata(target)
-        console.print(":chequered flag: Exiting :trophy:", style=success)
+        console.print(":checkered_flag: Exiting :trophy:", style=success)
 
 
 if __name__ == "__main__":
