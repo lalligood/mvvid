@@ -75,7 +75,9 @@ def get_confirmation(confirm: bool) -> bool:
         response = input("Do you wish to continue? (Y/N) ")
     if not confirm or response.lower().startswith("y"):
         return True
-    console.print("Canceling move at user request. Exiting . . .", style=fail)
+    console.print(
+        ":cross mark: Canceling move at user request. Exiting . . .", style=fail
+    )
     sys.exit(1)
 
 
@@ -86,7 +88,10 @@ def change_owner(target: Path) -> None:
             shutil.chown(each_file, "plex", "plex")
     # Change owner whether file or directory
     shutil.chown(target, "plex", "plex")
-    console.print(f"  {target.name} owner changed to plex:plex", style=low_info)
+    console.print(
+        f"  :check mark button: {target.name} owner changed to plex:plex",
+        style=low_info,
+    )
 
 
 def move_source_to_target(source_list: List[Path], target: Path) -> None:
@@ -107,7 +112,7 @@ def move_source_to_target(source_list: List[Path], target: Path) -> None:
             change_owner(target_name)
         except FileExistsError:
             console.print(
-                f"{each.name} ALREADY EXISTS! Skipping . . .", style=warn
+                f":warning: {each.name} ALREADY EXISTS! Skipping . . .", style=warn
             )
     console.print(
         f"Total of {len(source_list)} directory(s)[{info}]/file(s) moved.",
@@ -117,13 +122,19 @@ def move_source_to_target(source_list: List[Path], target: Path) -> None:
 
 def refresh_plex_metadata(target: bool) -> None:
     """Refresh PLEX metadata so that new items will appear in menu."""
-    content_label, library_section = ("TV_Shows", 4) if target else ("Movies", 3)
+    content_label, library_section, icon = (
+        ("TV_Shows", 4, ":television: ")
+        if target
+        else ("Movies", 3, ":clapper board: ")
+    )
     console.print("Refreshing PLEX metadata . . .", style=info)
     os.system(
         f"sudo su - plex -c '{plex_exec_dir}/Plex\ Media\ Scanner -srp "
         + f"--section {library_section}'"
     )
-    console.print(f"{content_label} directory refresh complete", style=success)
+    console.print(
+        f"{icon} {content_label} directory refresh complete", style=success
+    )
 
 
 @click.command()
@@ -169,7 +180,7 @@ def main(target: bool, match: str, confirmation: bool, refresh_only: bool) -> No
         target_dir = to_target(target)
         source_list = from_source(match)
         console.print(
-            f"The following directory(s)[{default}]/file(s) will be moved to "
+            f":information: The following directory(s)[{default}]/file(s) will be moved to "
             + f"[{info}]{target_dir}[/]:"
         )
         icon = ":television:" if target else ":clapper_board:"
@@ -179,7 +190,7 @@ def main(target: bool, match: str, confirmation: bool, refresh_only: bool) -> No
         if get_confirmation(confirmation):
             move_source_to_target(source_list, target_dir)
             refresh_plex_metadata(target)
-        console.print("Exiting . . .", style=success)
+        console.print(":chequered flag: Exiting :trophy:", style=success)
 
 
 if __name__ == "__main__":
