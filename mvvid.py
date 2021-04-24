@@ -6,20 +6,24 @@ import getpass
 import os
 from pathlib import Path
 from rich.console import Console
+from rich.theme import Theme
 import shutil
 import sys
 from typing import List
 
 plex_library_dir = Path("/var/lib/plexmediaserver/Library/")
 plex_exec_dir = Path("/usr/lib/plexmediaserver")
-curr_dir = Path.cwd()
-default = "bold white"
-console = Console(style=default)
-info = "bold white on blue"
-low_info = "blue"
-warn = "bold white on yellow"
-fail = "bold white on red"
-success = "bold white on green"
+current_dir = Path.cwd()
+custom_theme = Theme(
+    {
+        "fail": "bold white on red",
+        "info": "bold white on blue",
+        "low_info": "blue",
+        "success": "bold white on green",
+        "warn": "bold white on yellow",
+    }
+)
+console = Console(style="bold white", theme=custom_theme)
 
 
 class InvalidDirectoryError(Exception):
@@ -36,8 +40,8 @@ class InvalidUserError(Exception):
 
 def verify_current_directory() -> bool:
     """Make sure that this script is only being run from the Videos directory."""
-    if curr_dir.name != "Videos":
-        raise InvalidDirectoryError(f"No videos found in {curr_dir}!")
+    if current_dir.name != "Videos":
+        raise InvalidDirectoryError(f"No videos found in {current_dir}!")
     return True
 
 
@@ -54,7 +58,7 @@ def only_as_root() -> bool:
 def to_target(target_option: bool) -> Path:
     """Return Path to target directory based on target option."""
     target_dir = plex_library_dir / ("TV_Shows" if target_option else "Movies")
-    console.print("Destination directory: " + f"[{success}]{target_dir}")
+    console.print("Destination directory: " + f"['success']{target_dir}")
     return target_dir
 
 
@@ -64,7 +68,7 @@ def from_source(match_string: str) -> List[Path]:
     """
     return [
         f
-        for f in sorted(curr_dir.iterdir())
+        for f in sorted(current_dir.iterdir())
         if f.is_symlink() is False and fnmatch(f.name, match_string)
     ]
 
@@ -76,7 +80,7 @@ def get_confirmation(confirm: bool) -> bool:
     if not confirm or response.lower().startswith("y"):
         return True
     console.print(
-        ":cross_mark: Canceling move at user request. Exiting . . .", style=fail
+        ":cross_mark: Canceling move at user request. Exiting . . .", style="fail"
     )
     sys.exit(1)
 
@@ -89,8 +93,7 @@ def change_owner(target: Path) -> None:
     # Change owner whether file or directory
     shutil.chown(target, "plex", "plex")
     console.print(
-        f"  \u2705 owner changed to plex:plex",
-        style=low_info,
+        "  \u2705 owner changed to plex:plex", style="low_info",
     )
 
 
@@ -99,7 +102,7 @@ def move_source_to_target(source_list: List[Path], target: Path) -> None:
     for n, each in enumerate(source_list, 1):
         console.print(
             f":hourglass_not_done: Moving file/directory {n}/{len(source_list)}: "
-            + f"[{info}]{each.name}"
+            + f"['info']{each.name}"
         )
         target_name = target / each.name
         try:
@@ -112,11 +115,12 @@ def move_source_to_target(source_list: List[Path], target: Path) -> None:
             change_owner(target_name)
         except FileExistsError:
             console.print(
-                f":warning: {each.name} ALREADY EXISTS! Skipping . . .", style=warn
+                f":warning: {each.name} ALREADY EXISTS! Skipping . . .",
+                style="warn",
             )
     console.print(
-        f"Total of {len(source_list)} directory(s)[{info}]/file(s) moved.",
-        style=info,
+        f"Total of {len(source_list)} directory(s)['info']/file(s) moved.",
+        style="info",
     )
 
 
@@ -127,13 +131,13 @@ def refresh_plex_metadata(target: bool) -> None:
         if target
         else ("Movies", 3, ":clapper_board: ")
     )
-    console.print("Refreshing PLEX metadata . . .", style=info)
+    console.print("Refreshing PLEX metadata . . .", style="info")
     os.system(
         f"sudo su - plex -c '{plex_exec_dir}/Plex\ Media\ Scanner -srp "
         + f"--section {library_section}'"
     )
     console.print(
-        f"{icon} {content_label} directory refresh complete", style=success
+        f"{icon} {content_label} directory refresh complete", style="success"
     )
 
 
@@ -147,9 +151,7 @@ def refresh_plex_metadata(target: bool) -> None:
     help="Content type, either 'TV show' or 'movie'",
 )
 @click.option(
-    "--match",
-    default="*",
-    help="Regex pattern of file(s)/directory(s) to move",
+    "--match", default="*", help="Regex pattern of file(s)/directory(s) to move",
 )
 @click.option(
     "-c",
@@ -160,10 +162,7 @@ def refresh_plex_metadata(target: bool) -> None:
     help="Request prompt for confirmation before moving",
 )
 @click.option(
-    "--refresh-only",
-    is_flag=True,
-    default=False,
-    help="Only refresh metadata",
+    "--refresh-only", is_flag=True, default=False, help="Only refresh metadata",
 )
 def main(target: bool, match: str, confirmation: bool, refresh_only: bool) -> None:
     """Copies directory(s) containing videos and/or video files to PLEX directory
@@ -180,17 +179,17 @@ def main(target: bool, match: str, confirmation: bool, refresh_only: bool) -> No
         target_dir = to_target(target)
         source_list = from_source(match)
         console.print(
-            f":information: The following directory(s)[{default}]/file(s) will be "
-            + f"moved to [{info}]{target_dir}[/]:"
+            ":information: The following directory(s)['default']/file(s) will be "
+            + f"moved to ['info']{target_dir}[/]:"
         )
         icon = ":television:" if target else ":clapper_board:"
         console.print(
-            "\n".join(f"  {icon} {f.name}" for f in source_list), style=low_info
+            "\n".join(f"  {icon} {f.name}" for f in source_list), style="low_info"
         )
         if get_confirmation(confirmation):
             move_source_to_target(source_list, target_dir)
             refresh_plex_metadata(target)
-        console.print(":checkered_flag: Exiting :trophy:", style=success)
+        console.print(":checkered_flag: Exiting :trophy:", style="success")
 
 
 if __name__ == "__main__":
