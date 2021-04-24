@@ -58,7 +58,7 @@ def only_as_root() -> bool:
 def to_target(target_option: bool) -> Path:
     """Return Path to target directory based on target option."""
     target_dir = plex_library_dir / ("TV_Shows" if target_option else "Movies")
-    console.print("Destination directory: " + f"['success']{target_dir}")
+    console.print("Destination directory: " + f"[success]{target_dir}")
     return target_dir
 
 
@@ -102,7 +102,7 @@ def move_source_to_target(source_list: List[Path], target: Path) -> None:
     for n, each in enumerate(source_list, 1):
         console.print(
             f":hourglass_not_done: Moving file/directory {n}/{len(source_list)}: "
-            + f"['info']{each.name}"
+            + f"[info]{each.name}"
         )
         target_name = target / each.name
         try:
@@ -119,7 +119,7 @@ def move_source_to_target(source_list: List[Path], target: Path) -> None:
                 style="warn",
             )
     console.print(
-        f"Total of {len(source_list)} directory(s)['info']/file(s) moved.",
+        f"Total of {len(source_list)} directory(s)[info]/file(s) moved.",
         style="info",
     )
 
@@ -179,8 +179,8 @@ def main(target: bool, match: str, confirmation: bool, refresh_only: bool) -> No
         target_dir = to_target(target)
         source_list = from_source(match)
         console.print(
-            ":information: The following directory(s)['default']/file(s) will be "
-            + f"moved to ['info']{target_dir}[/]:"
+            ":information: The following directory(s)[default]/file(s) will be "
+            + f"moved to [info]{target_dir}[/]:"
         )
         icon = ":television:" if target else ":clapper_board:"
         console.print(
