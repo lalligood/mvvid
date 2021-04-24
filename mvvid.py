@@ -6,6 +6,7 @@ import getpass
 import os
 from pathlib import Path
 from rich.console import Console
+from rich.table import Table
 from rich.theme import Theme
 import shutil
 import sys
@@ -93,7 +94,8 @@ def change_owner(target: Path) -> None:
     # Change owner whether file or directory
     shutil.chown(target, "plex", "plex")
     console.print(
-        "  \u2705 owner changed to plex:plex", style="low_info",
+        "  \u2705 owner changed to plex:plex",
+        style="low_info",
     )
 
 
@@ -124,6 +126,23 @@ def move_source_to_target(source_list: List[Path], target: Path) -> None:
     )
 
 
+def build_table(
+    content_list: List[str], target_path: Path, tv_flag: bool
+) -> Table:
+    """Gather all elements for returning a table containing content to be moved."""
+    table = Table(
+        title=":information: The following directory(s)[default]/file(s) will be "
+        + f"moved to [info]{target_path}[/]:"
+    )
+    table.add_column("Type", style="low_info")
+    content = "TV Show" if tv_flag else "Movie"
+    table.add_column(f"{content} Name", justify="center", style="low_info")
+    icon = ":television:" if tv_flag else ":clapper_board:"
+    for f in content_list:
+        table.add_row(icon, f.name, style="low_info")
+    return table
+
+
 def refresh_plex_metadata(target: bool) -> None:
     """Refresh PLEX metadata so that new items will appear in menu."""
     content_label, library_section, icon = (
@@ -151,7 +170,9 @@ def refresh_plex_metadata(target: bool) -> None:
     help="Content type, either 'TV show' or 'movie'",
 )
 @click.option(
-    "--match", default="*", help="Regex pattern of file(s)/directory(s) to move",
+    "--match",
+    default="*",
+    help="Regex pattern of file(s)/directory(s) to move",
 )
 @click.option(
     "-c",
@@ -162,7 +183,10 @@ def refresh_plex_metadata(target: bool) -> None:
     help="Request prompt for confirmation before moving",
 )
 @click.option(
-    "--refresh-only", is_flag=True, default=False, help="Only refresh metadata",
+    "--refresh-only",
+    is_flag=True,
+    default=False,
+    help="Only refresh metadata",
 )
 def main(target: bool, match: str, confirmation: bool, refresh_only: bool) -> None:
     """Copies directory(s) containing videos and/or video files to PLEX directory
@@ -178,18 +202,14 @@ def main(target: bool, match: str, confirmation: bool, refresh_only: bool) -> No
             sys.exit(0)
         target_dir = to_target(target)
         source_list = from_source(match)
-        console.print(
-            ":information: The following directory(s)[default]/file(s) will be "
-            + f"moved to [info]{target_dir}[/]:"
-        )
-        icon = ":television:" if target else ":clapper_board:"
-        console.print(
-            "\n".join(f"  {icon} {f.name}" for f in source_list), style="low_info"
-        )
+        console.print(build_table(source_list, target_dir, target))
         if get_confirmation(confirmation):
             move_source_to_target(source_list, target_dir)
             refresh_plex_metadata(target)
-        console.print(":checkered_flag: Exiting :trophy:", style="success")
+        console.print(
+            ":checkered_flag: :trophy: Exiting :trophy: :checkered_flag:",
+            style="success",
+        )
 
 
 if __name__ == "__main__":
