@@ -134,9 +134,9 @@ def build_table(
         title=":information: The following directory(s)[default]/file(s) will be "
         + f"moved to [info]{target_path}[/]:"
     )
-    table.add_column("Type", style="low_info")
+    table.add_column("Type", justify="center", style="low_info")
     content = "TV Show" if tv_flag else "Movie"
-    table.add_column(f"{content} Name", justify="center", style="low_info")
+    table.add_column(f"{content} Name", justify="left", style="low_info")
     icon = ":television:" if tv_flag else ":clapper_board:"
     for f in content_list:
         table.add_row(icon, f.name, style="low_info")
