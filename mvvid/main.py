@@ -2,7 +2,7 @@
 
 import click
 from fnmatch import fnmatch
-import getpass
+import grp
 import os
 from pathlib import Path
 from rich.console import Console
@@ -15,6 +15,7 @@ from typing import List
 plex_library_dir = Path("/var/lib/plexmediaserver/Library/")
 plex_exec_dir = Path("/usr/lib/plexmediaserver")
 current_dir = Path.cwd()
+current_user = os.getlogin()
 custom_theme = Theme(
     {
         "fail": "bold white on red",
@@ -33,26 +34,36 @@ class InvalidDirectoryError(Exception):
     pass
 
 
-class InvalidUserError(Exception):
-    """Raise this exception if script is run as any user other that root user."""
+class InvalidUserPermissionsError(Exception):
+    """Raise this exception if user does not have write permissions to target
+    directory."""
 
     pass
 
 
 def verify_current_directory() -> bool:
     """Make sure that this script is only being run from the Videos directory."""
-    if current_dir.name != "Videos":
+    valid_dirs = ["Videos", "Downloads"]
+    if current_dir.name not in valid_dirs:
         raise InvalidDirectoryError(f"No videos found in {current_dir}!")
     return True
 
 
-def only_as_root() -> bool:
-    """Make sure that the only user running this script is root user.
-    Otherwise raise InvalidUserError exception.
-    """
-    current_user = getpass.getuser()
-    if current_user != "root":
-        raise InvalidUserError("Script can only be run as root user!")
+def verify_permissions() -> bool:
+    """Make sure that the user running this script has group permissions to target
+    directory. Otherwise raise InvalidUserError exception."""
+    plex_membership = current_user in grp.getgrnam("plex").gr_mem
+    target_dirs = ["TV_Shows", "Movies"]
+    plex_dirs_writable = all(
+        [
+            os.access(plex_library_dir / each_dir, os.W_OK)
+            for each_dir in target_dirs
+        ]
+    )
+    if not (plex_membership and plex_dirs_writable):
+        raise InvalidUserPermissionsError(
+            f"You do not have permissions to write to {plex_library_dir}!"
+        )
     return True
 
 
@@ -86,19 +97,6 @@ def get_confirmation(confirm: bool) -> bool:
     sys.exit(1)
 
 
-def change_owner(target: Path) -> None:
-    """Change owner to plex:plex for file/directory."""
-    if target.is_dir():
-        for each_file in target.iterdir():
-            shutil.chown(each_file, "plex", "plex")
-    # Change owner whether file or directory
-    shutil.chown(target, "plex", "plex")
-    console.print(
-        "  \u2705 owner changed to plex:plex",
-        style="low_info",
-    )
-
-
 def move_source_to_target(source_list: List[Path], target: Path) -> None:
     """Move source directory/file to target directory."""
     for n, each in enumerate(source_list, 1):
@@ -114,7 +112,6 @@ def move_source_to_target(source_list: List[Path], target: Path) -> None:
             else:
                 shutil.copy(each, target_name)
                 each.unlink()
-            change_owner(target_name)
         except FileExistsError:
             console.print(
                 f":warning: {each.name} ALREADY EXISTS! Skipping . . .",
@@ -196,7 +193,7 @@ def main(target: bool, match: str, confirmation: bool, refresh_only: bool) -> No
     it can only be run as root. Also, it should only ever be run from the Videos
     directory.
     """
-    if verify_current_directory() and only_as_root():
+    if verify_current_directory() and verify_permissions():
         if refresh_only:
             refresh_plex_metadata(target)
             sys.exit(0)
