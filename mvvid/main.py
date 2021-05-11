@@ -55,10 +55,7 @@ def verify_permissions() -> bool:
     plex_membership = current_user in grp.getgrnam("plex").gr_mem
     target_dirs = ["TV_Shows", "Movies"]
     plex_dirs_writable = all(
-        [
-            os.access(plex_library_dir / each_dir, os.W_OK)
-            for each_dir in target_dirs
-        ]
+        [os.access(plex_library_dir / each_dir, os.W_OK) for each_dir in target_dirs]
     )
     if not (plex_membership and plex_dirs_writable):
         raise InvalidUserPermissionsError(
@@ -123,9 +120,7 @@ def move_source_to_target(source_list: List[Path], target: Path) -> None:
     )
 
 
-def build_table(
-    content_list: List[str], target_path: Path, tv_flag: bool
-) -> Table:
+def build_table(content_list: List[str], target_path: Path, tv_flag: bool) -> Table:
     """Gather all elements for returning a table containing content to be moved."""
     table = Table(
         title=":information: The following directory(s)[default]/file(s) will be "
@@ -148,13 +143,11 @@ def refresh_plex_metadata(target: bool) -> None:
         else ("Movies", 3, ":clapper_board: ")
     )
     console.print("Refreshing PLEX metadata . . .", style="info")
-    os.system(
+    os.system(  # nosec
         f"sudo su - plex -c '{plex_exec_dir}/Plex\ Media\ Scanner -srp "
         + f"--section {library_section}'"
     )
-    console.print(
-        f"{icon} {content_label} directory refresh complete", style="success"
-    )
+    console.print(f"{icon} {content_label} directory refresh complete", style="success")
 
 
 @click.command()
