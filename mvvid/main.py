@@ -124,7 +124,8 @@ def build_table(content_list: List[str], target_path: Path, tv_flag: bool) -> Ta
     """Gather all elements for returning a table containing content to be moved."""
     table = Table(
         title=":information: The following directory(s)[default]/file(s) will be "
-        + f"moved to [info]{target_path}[/]:"
+        + f"moved to [info]{target_path}[/]:",
+        min_width=40,
     )
     table.add_column("Type", justify="center", style="low_info")
     content = "TV Show" if tv_flag else "Movie"
@@ -192,6 +193,9 @@ def main(target: bool, match: str, confirmation: bool, refresh_only: bool) -> No
             sys.exit(0)
         target_dir = to_target(target)
         source_list = from_source(match)
+        if not source_list:
+            console.print("No matching content found. Exiting. . .")
+            sys.exit(1)
         console.print(build_table(source_list, target_dir, target))
         if get_confirmation(confirmation):
             move_source_to_target(source_list, target_dir)
