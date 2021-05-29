@@ -9,7 +9,7 @@ Click==7.0
 colorama==0.4.3
 command-not-found==0.3
 commonmark==0.9.1
-cryptography==2.8
+cryptography==3.2
 cupshelpers==1.0
 dbus-python==1.2.16
 decorator==4.4.2
