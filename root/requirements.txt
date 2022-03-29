@@ -42,7 +42,7 @@ netifaces==0.10.4
 oauthlib==3.1.0
 olefile==0.46
 onboard==1.4.1
-paramiko==2.6.0
+paramiko==2.10.1
 parso==0.5.2
 pbr==5.4.5
 pexpect==4.6.0
